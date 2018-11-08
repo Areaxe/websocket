@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+    <div id='title'></div>
+    <div id='main'>
+        
+    </div>
+    <script>
+        var WebSocket = new WebSocket("ws://localhost:3000/");
+        WebSocket.onopen = function(){
+            console.log('websocket open');
+        }
+        WebSocket.onclose = function(){
+            console.log('websocket close');
+        }
+        WebSocket.onmessage = function(e){
+            let infos = e.data.split('$:$');
+            let nickname = infos[0];
+            let text = infos[1];
+            let msgs = document.getElementById('msgs');
+            let elm = document.createElement('div');
+            
+            if(nickname==localStorage.getItem('nickname')){
+                elm.setAttribute('class','right-msg');
+            }else{
+                elm.setAttribute('class','left-msg');
+            }
+            elm.innerHTML = '<div>'+
+                '<span class="name">'+nickname+'</span>'+
+                '<div class="text">'+text+'</div>'+
+            '</div>'
+            msgs.appendChild(elm);
+        }
+        window.onload = function(){
+            let main = document.getElementById('main');
+            if(localStorage.getItem('nickname')){
+                main.innerHTML = "<div>"+
+                    '<div id="msgs" class="message-container">'+
+                    '</div>'+
+                   '<div class="send-panel">'+
+                        '<input type="text" id="msg" onkeydown="onKeyDown(event)" class="msg-input" />'+
+                        '<button class="msg-send-btn" onclick="sendMessage()">发送</button>'+
+                    '</div>'+
+                '</div>'
+            }else{
+                main.innerHTML = '<div class="login-form" >'+
+                   ' <div class="login-title">请设置用户名</div>'+
+                   ' <div>'+
+                       ' <input class="input" type="text" placeholder="请输入用户名" />'+
+                    '</div>'+
+                    '<button id="setBtn" class="send-button" onclick="saveName()">确定</button>'+
+                '</div>';
+            }
+        }
+        function saveName(){
+            let text = document.querySelector('input').value;
+            if(text){
+                localStorage.setItem('nickname',text);
+                location.reload();
+            }
+        }
+        function sendMessage(){
+            let text = document.getElementById('msg').value;
+            let name = localStorage.getItem('nickname');
+            WebSocket.send(name+'$:$'+text);
+            document.getElementById('msg').value = '';
+        }
+        function onKeyDown(e){
+            if(e.keyCode === 13){
+                this.sendMessage();
+            }
+        }
+    </script>
+</body>
+
+</html>
